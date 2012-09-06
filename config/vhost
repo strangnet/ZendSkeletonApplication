@@ -1,0 +1,43 @@
+# Symlink this file so it can be read by Apache. Under Mac OS X, generally:
+#
+# $> cd /usr/local/zend/apache2/conf/ && sudo mkdir sites-enabled
+# $> sudo echo 'Include /usr/local/zend/apache2/conf/sites-enabled/' >> httpd.conf
+# $> sudo ln -s /Users/[user]/NetBeansProjects/lendo.se/application/configs/vhost-dev \
+# /usr/local/zend/apache2/conf/sites-enabled/001-dev-lendo.se
+
+NameVirtualHost *:80
+Listen 80
+<VirtualHost *:80>
+    ServerName zendbox.local
+    
+    # Symlink this location to the location of your code, ex:
+    # $> ln -s /Users/[user]/NetBeansProjects/lendo.se /var/www/lendo-www
+    DocumentRoot /var/www/zendbox-www/public
+
+    SetEnv APPLICATION_ENV "development"
+
+    <Directory /var/www/zendbox-www/public>
+        Options FollowSymLinks
+        AllowOverride FileInfo
+        Order allow,deny
+        Allow from all
+
+        <IfModule mod_rewrite.c>
+            RewriteEngine on
+
+            # Send all non existing file requests to index.php
+            RewriteCond %{REQUEST_FILENAME} -s [OR]
+            RewriteCond %{REQUEST_FILENAME} -l [OR]
+            RewriteCond %{REQUEST_FILENAME} -d
+            RewriteRule ^.*$ - [NC,L]
+	    RewriteRule ^.*$ index.php [NC,L]
+        </IfModule>
+    </Directory>
+
+    # keep all logs in the same place
+    RewriteLog          "/var/www/zendbox-www/data/logs/apache2_rewrite.log"
+    RewriteLogLevel 2
+    CustomLog           "/var/www/zendbox-www/data/logs/apache2_access-combined.log" combined
+    ErrorLog            "/var/www/zendbox-www/data/logs/apache2_error.log"
+    LogLevel debug
+</VirtualHost>
